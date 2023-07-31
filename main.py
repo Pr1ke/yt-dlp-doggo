@@ -19,17 +19,7 @@ def youtube_url_validation(url):
         '(watch\?v=|embed/|v/|.+\?v=)?([^&=%\?]{11})')
 
     youtube_regex_match = re.match(youtube_regex, url)
-    if youtube_regex_match:
-        return youtube_regex_match
-
     return youtube_regex_match
-
-
-@bot.message_handler(commands=['start', 'help'])
-def test(message):
-    bot.reply_to(
-        message, "*Send me a video link* and I'll download it for you, works with *YouTube*, *Twitter*, *TikTok*, *Reddit* and more.\n\n_Powered by_ [yt-dlp](https://github.com/yt-dlp/yt-dlp/)", parse_mode="MARKDOWN", disable_web_page_preview=True)
-
 
 def download_video(message, url, audio=False, format_id="mp4"):
     url_info = urlparse(url)
@@ -118,7 +108,13 @@ def get_text(message):
             return None
     else:
         return message.text.split(' ')[1]
+    
 
+    
+@bot.message_handler(commands=['start', 'help'])
+def test(message):
+    bot.reply_to(
+        message, "*Send me a video link* and I'll download it for you, works with *YouTube*, *Twitter*, *TikTok*, *Reddit* and more.\n\n_Powered by_ [yt-dlp](https://github.com/yt-dlp/yt-dlp/)", parse_mode="MARKDOWN", disable_web_page_preview=True)
 
 @bot.message_handler(commands=['download'])
 def download_command(message):
