@@ -163,7 +163,7 @@ def checkAuth(message):
 def authorize(message, passphrase: str):
     if config.passphrase == passphrase:
         with open(auth, 'a') as file:
-            file.write(str(message.chat.id))
+            file.write(str(message.chat.id)+"#")
             return True
     return False
 
