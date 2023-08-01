@@ -10,8 +10,8 @@ from telebot.util import quick_markup
 
 bot = telebot.TeleBot(config.token)
 last_edited = {}
-buffer = config.archiveFolder+"/buffer"
-archive = config.archiveFolder+"/archive"
+buffer = config.directory+"/buffer"
+archive = config.directory+"/archive"
 
 
 
