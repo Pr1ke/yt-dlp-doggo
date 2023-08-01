@@ -16,6 +16,7 @@ buffer = config.directory+"buffer/"
 archive = config.directory+"archive/"
 favorites = config.directory+"favorites/"
 playlist = config.directory+"playlist/" 
+auth = config.directory + "/auth.txt"
 
 
 
@@ -143,6 +144,24 @@ def get_text(message):
             return None
     else:
         return message.text.split(' ')[1]
+
+def checkAuth(message):
+    with open(auth, 'a') as file:
+        if message.chat.id in file.read():
+            return True
+        else:
+            bot.reply_to(
+                message, "Ich höre nur auf Eumel, probiere es mit /authorize passwort", parse_mode="MARKDOWN")
+            return False
+
+def authorize(message, passphrase: str):
+    if config.passphrase == passphrase:
+        with open(auth, 'a') as file:
+            file.write(message.chat.id)
+            return True
+    return False
+
+    
     
 
 
@@ -169,6 +188,9 @@ def test(message):
         message, "/favorite - um das letzte Video zu favorisieren, oder /favorite url um das Video herunterzuladen und favorisieren."
     )
     bot.reply_to(
+        message, "/authorize passwort - um dich als Eumel zu outen."
+    )
+    bot.reply_to(
         message, "Standardmäßig werden Videos im Archiv gespeichert."
     )
 
@@ -179,9 +201,25 @@ def download_command(message):
         bot.reply_to(
             message, 'Ich konnte die URL nicht erkennen, probiere es mit `/download url`', parse_mode="MARKDOWN")
         return
+    if checkAuth(message):
+        log(message, text, 'video')
+        download_video(message, text)
+
+@bot.message_handler(commands=['authorize'])
+def download_command(message):
+    text = get_text(message)
+    if not text:
+        bot.reply_to(
+            message, 'Hast du eventuell das Passwort vergessen? Probiere es mit `/authorize passwort`', parse_mode="MARKDOWN")
+        return
 
     log(message, text, 'video')
-    download_video(message, text)
+    if authorize(message.chat.id, text):
+            bot.reply_to(
+            message, 'Du bist nun ein Eumel :)', parse_mode="MARKDOWN")
+    else:
+        bot.reply_to(
+            message, 'Das hat nicht geklappt, falsches passwort?', parse_mode="MARKDOWN")
 
 
 @bot.message_handler(commands=['audio'])
@@ -191,91 +229,97 @@ def download_audio_command(message):
         bot.reply_to(
             message, 'Ich konnte die URL nicht erkennen, probiere es mit `/audio url`', parse_mode="MARKDOWN")
         return
-
-    log(message, text, 'audio')
-    download_video(message, text, True)
+    if checkAuth(message):
+        log(message, text, 'audio')
+        download_video(message, text, True)
 
 @bot.message_handler(commands=['play'])
 def playBuffer(message):
     text = get_text(message)
     if text:
         download_video(message, text)
-
-    clearPlaylist()
-    copyAllFiles(buffer, playlist)
-    bot.reply_to(
-        message, 'Ich spiele das letzte Video ab.', parse_mode="MARKDOWN")
-    return
+    if checkAuth(message):
+        clearPlaylist()
+        copyAllFiles(buffer, playlist)
+        bot.reply_to(
+            message, 'Ich spiele das letzte Video ab.', parse_mode="MARKDOWN")
+        return
 
 @bot.message_handler(commands=['playfavorites'])
 def playFavorites(message):
-    clearPlaylist()
-    copyAllFiles(favorites, playlist)
-    bot.reply_to(
-        message, 'Ich spiele die favorisierten Videos ab.', parse_mode="MARKDOWN")
-    return
+    if checkAuth(message):
+        clearPlaylist()
+        copyAllFiles(favorites, playlist)
+        bot.reply_to(
+            message, 'Ich spiele die favorisierten Videos ab.', parse_mode="MARKDOWN")
+        return
 
 @bot.message_handler(commands=['playarchive'])
 def playArchive(message):
-    clearPlaylist()
-    copyAllFiles(archive, playlist)
-    bot.reply_to(
-        message, 'Ich spiele die archivierten Videos ab.', parse_mode="MARKDOWN")
-    return
+    if checkAuth(message):
+        clearPlaylist()
+        copyAllFiles(archive, playlist)
+        bot.reply_to(
+            message, 'Ich spiele die archivierten Videos ab.', parse_mode="MARKDOWN")
+        return
 
 @bot.message_handler(commands=['favorite'])
 def favorite(message):
-    text = get_text(message)
-    if text:
-        download_video(message, text)
+    if checkAuth(message):
+        text = get_text(message)
+        if text:
+           download_video(message, text)
 
-    cleanup("", True)
-    bot.reply_to(
-            message, 'Video wurde favorisiert.', parse_mode="MARKDOWN")
-    return
+        cleanup("", True)
+        bot.reply_to(
+                message, 'Video wurde favorisiert.', parse_mode="MARKDOWN")
+        return
 
 @bot.message_handler(commands=['archive'])
 def archiveLatest(message):
-    text = get_text(message)
-    if text:
-        download_video(message, text)
-    cleanup("", False)
-    bot.reply_to(
-            message, 'Video wurde archiviert.', parse_mode="MARKDOWN")
-    return
+    if checkAuth(message):
+        text = get_text(message)
+        if text:
+            download_video(message, text)
+        cleanup("", False)
+        bot.reply_to(
+                message, 'Video wurde archiviert.', parse_mode="MARKDOWN")
+        return
 
 @bot.message_handler(commands=['randomize'])
 def randomizeVideos(message):
-    cleanup("")
-    clearPlaylist()
+    if checkAuth(message):
+        cleanup("")
+        clearPlaylist()
 
-    copyAllFiles(archive, playlist)
-    copyAllFiles(favorites, playlist)
+        copyAllFiles(archive, playlist)
+        copyAllFiles(favorites, playlist)
 
-    bot.reply_to(
-            message, 'Playlist wurde zurückgesetzt und alle Videos eingefügt.', parse_mode="MARKDOWN")
-    return
+        bot.reply_to(
+                message, 'Playlist wurde zurückgesetzt und alle Videos eingefügt.', parse_mode="MARKDOWN")
+        return
 
 @bot.message_handler(commands=['custom'])
 def custom(message):
-    text = get_text(message)
-    if not text:
-        bot.reply_to(
-            message, 'Ich konnte die URL nicht erkennen, probiere es mit  `/custom url`', parse_mode="MARKDOWN")
-        return
+    if checkAuth(message):
+        text = get_text(message)
+        if not text:
+            bot.reply_to(
+                message, 'Ich konnte die URL nicht erkennen, probiere es mit  `/custom url`', parse_mode="MARKDOWN")
+            return
 
-    msg = bot.reply_to(message, 'Ermittle Format...')
+        msg = bot.reply_to(message, 'Ermittle Format...')
 
-    with yt_dlp.YoutubeDL() as ydl:
-        info = ydl.extract_info(text, download=False)
+        with yt_dlp.YoutubeDL() as ydl:
+            info = ydl.extract_info(text, download=False)
 
-    data = {f"{x['resolution']}.{x['ext']}": {
-        'callback_data': f"{x['format_id']}"} for x in info['formats'] if x['video_ext'] != 'none'}
+        data = {f"{x['resolution']}.{x['ext']}": {
+            'callback_data': f"{x['format_id']}"} for x in info['formats'] if x['video_ext'] != 'none'}
 
-    markup = quick_markup(data, row_width=2)
+        markup = quick_markup(data, row_width=2)
 
-    bot.delete_message(msg.chat.id, msg.message_id)
-    bot.reply_to(message, "Wähle bitte ein Format", reply_markup=markup)
+        bot.delete_message(msg.chat.id, msg.message_id)
+        bot.reply_to(message, "Wähle bitte ein Format", reply_markup=markup)
 
 
 @bot.callback_query_handler(func=lambda call: True)
@@ -294,9 +338,10 @@ def handle_private_messages(message):
     text = message.text if message.text else message.caption if message.caption else None
 
     if message.chat.type == 'private':
-        log(message, text, 'video')
-        download_video(message, text)
-        return
+        if checkAuth(message):
+            log(message, text, 'video')
+            download_video(message, text)
+            return
 
 
 bot.infinity_polling()
