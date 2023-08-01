@@ -145,7 +145,7 @@ def get_text(message):
     else:
         return message.text.split(' ')[1]
 
-def createFileIfNotExists()
+def createFileIfNotExists():
     if not os.path.exists(auth):
         with open(auth, 'w') as file:
             return True
