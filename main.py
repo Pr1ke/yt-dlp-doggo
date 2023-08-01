@@ -145,8 +145,14 @@ def get_text(message):
     else:
         return message.text.split(' ')[1]
 
+def createFileIfNotExists()
+    if not os.path.exists(auth):
+        with open(auth, 'w') as file:
+            return True
+
 def checkAuth(message):
-    with open(auth, 'a') as file:
+    createFileIfNotExists()
+    with open(auth, 'r') as file:
         if message.chat.id in file.read():
             return True
         else:
