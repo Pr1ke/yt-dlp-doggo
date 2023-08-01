@@ -10,8 +10,8 @@ from telebot.util import quick_markup
 
 bot = telebot.TeleBot(config.token)
 last_edited = {}
-buffer = config.directory+"/buffer"
-archive = config.directory+"/archive"
+buffer = config.directory+"/buffer/"
+archive = config.directory+"/archive/"
 
 
 
@@ -95,7 +95,7 @@ def download_video(message, url, audio=False, format_id="mp4", target=buffer):
 def cleanup(newFile: str):
     filelist = get_all_files_in_directory(buffer)
     for f in filelist:
-        if not os.path.basename(f) == newFile:
+        if not f == newFile:
             os.rename(f, archive + os.path.basename(f))
 
 def get_all_files_in_directory(path):
