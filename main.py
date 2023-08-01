@@ -54,7 +54,7 @@ def download_video(message, url, audio=False, format_id="mp4", archive=True, tar
                     print(e)
 
         msg = bot.reply_to(message, 'Downloading...')
-        with yt_dlp.YoutubeDL({'format': format_id, 'outtmpl': 'outputs/%(title)s.%(ext)s', 'progress_hooks': [progress], 'postprocessors': [{  # Extract audio using ffmpeg
+        with yt_dlp.YoutubeDL({'paths': {'home':target},'format': format_id, 'outtmpl': 'outputs/%(title)s.%(ext)s', 'progress_hooks': [progress], 'postprocessors': [{  # Extract audio using ffmpeg
             'key': 'FFmpegExtractAudio',
             'preferredcodec': 'mp3',
         }] if audio else [], 'max_filesize': config.max_filesize}) as ydl:
@@ -76,15 +76,11 @@ def download_video(message, url, audio=False, format_id="mp4", archive=True, tar
                     bot.edit_message_text(
                         chat_id=message.chat.id, message_id=msg.message_id, text=f"Couldn't send file, make sure it's supported by Telegram and it doesn't exceed *{round(config.max_filesize / 1000000)}MB*", parse_mode="MARKDOWN")
                     for file in info['requested_downloads']:
-                        if archive:
-                            os.rename(file['filepath'], target + "/" + os.path.basename(file['filepath']))
-                        else:
+                        if not archive:
                             os.remove(file['filepath'])
                 else:
                     for file in info['requested_downloads']:
-                        if archive:
-                            os.rename(file['filepath'], target + "/" + os.path.basename(file['filepath']))
-                        else:
+                        if not archive:
                             os.remove(file['filepath'])
             except Exception as e:
                 if isinstance(e, yt_dlp.utils.DownloadError):
