@@ -220,7 +220,7 @@ def download_command(message):
         return
 
     log(message, text, 'video')
-    if authorize(message.chat.id, text):
+    if authorize(message, text):
             bot.reply_to(
             message, 'Du bist nun ein Eumel :)', parse_mode="MARKDOWN")
     else:
