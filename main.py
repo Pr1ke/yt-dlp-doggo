@@ -21,7 +21,10 @@ def youtube_url_validation(url):
     youtube_regex_match = re.match(youtube_regex, url)
     return youtube_regex_match
 
-def download_video(message, url, audio=False, format_id="mp4"):
+
+
+
+def download_video(message, url, audio=False, format_id="mp4", archive=True, target=config.archiveFolder):
     url_info = urlparse(url)
     if url_info.scheme:
         if url_info.netloc in ['www.youtube.com', 'youtu.be', 'youtube.com', 'youtu.be']:
@@ -51,12 +54,12 @@ def download_video(message, url, audio=False, format_id="mp4"):
                     print(e)
 
         msg = bot.reply_to(message, 'Downloading...')
-        with yt_dlp.YoutubeDL({'format': format_id, 'outtmpl': 'outputs/%(title)s.%(ext)s', 'progress_hooks': [progress], 'postprocessors': [{  # Extract audio using ffmpeg
+        with yt_dlp.YoutubeDL({ 'output': target, 'format': format_id, 'outtmpl': 'outputs/%(title)s.%(ext)s', 'progress_hooks': [progress], 'postprocessors': [{  # Extract audio using ffmpeg
             'key': 'FFmpegExtractAudio',
             'preferredcodec': 'mp3',
         }] if audio else [], 'max_filesize': config.max_filesize}) as ydl:
             try:
-                info = ydl.extract_info(url, download=True)
+                info = ydl.extract_info(url, download=True, )
 
                 bot.edit_message_text(
                     chat_id=message.chat.id, message_id=msg.message_id, text='Sending file to Telegram...')
@@ -73,10 +76,12 @@ def download_video(message, url, audio=False, format_id="mp4"):
                     bot.edit_message_text(
                         chat_id=message.chat.id, message_id=msg.message_id, text=f"Couldn't send file, make sure it's supported by Telegram and it doesn't exceed *{round(config.max_filesize / 1000000)}MB*", parse_mode="MARKDOWN")
                     for file in info['requested_downloads']:
-                        os.remove(file['filepath'])
+                        if not archive:
+                            os.remove(file['filepath'])
                 else:
                     for file in info['requested_downloads']:
-                        os.remove(file['filepath'])
+                        if not archive:
+                            os.remove(file['filepath'])
             except Exception as e:
                 if isinstance(e, yt_dlp.utils.DownloadError):
                     bot.edit_message_text(
@@ -110,7 +115,7 @@ def get_text(message):
         return message.text.split(' ')[1]
     
 
-    
+
 @bot.message_handler(commands=['start', 'help'])
 def test(message):
     bot.reply_to(
