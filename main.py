@@ -4,6 +4,8 @@ import telebot
 import config
 import yt_dlp
 import re
+import shutil
+import time
 import os
 from telebot import types
 from telebot.util import quick_markup
@@ -12,6 +14,8 @@ bot = telebot.TeleBot(config.token)
 last_edited = {}
 buffer = config.directory+"buffer/"
 archive = config.directory+"archive/"
+favorites = config.directory+"favorites/"
+playlist = config.directory+"playlist/" 
 
 
 
@@ -92,11 +96,24 @@ def download_video(message, url, audio=False, format_id="mp4", target=buffer):
         bot.reply_to(message, 'Invalid URL')
 
 
-def cleanup(newFile: str):
+def cleanup(newFile: str, moveToFavorite=False):
     filelist = get_all_files_in_directory(buffer)
     for f in filelist:
-        if not f == newFile:
+        if not f == newFile and not moveToFavorite:
             os.rename(f, archive + os.path.basename(f))
+        elif moveToFavorite:
+            os.rename(f, favorites + os.path.basename(f)) 
+
+def copyAllFiles(source: str, destination: str):
+    filelist = get_all_files_in_directory(source)
+    for f in filelist:
+        shutil.copy(f, destination)
+
+def clearPlaylist():
+    filelist = get_all_files_in_directory(playlist)
+    for f in filelist:
+        os.remove(f)
+    time.sleep(2)
 
 def get_all_files_in_directory(path):
     all_files = []
@@ -157,6 +174,55 @@ def download_audio_command(message):
     log(message, text, 'audio')
     download_video(message, text, True)
 
+@bot.message_handler(commands=['play'])
+def playBuffer(message):
+    clearPlaylist()
+    copyAllFiles(buffer, playlist)
+    bot.reply_to(
+        message, 'Playing latest Video', parse_mode="MARKDOWN")
+    return
+
+@bot.message_handler(commands=['play favorites'])
+def playFavorites(message):
+    clearPlaylist()
+    copyAllFiles(favorites, playlist)
+    bot.reply_to(
+        message, 'Playing favorited videos', parse_mode="MARKDOWN")
+    return
+
+@bot.message_handler(commands=['play archive'])
+def playArchive(message):
+    clearPlaylist()
+    copyAllFiles(archive, playlist)
+    bot.reply_to(
+        message, 'Playing Archived Videos', parse_mode="MARKDOWN")
+    return
+
+@bot.message_handler(commands=['favorite'])
+def favorite(message):
+    cleanup("", True)
+    bot.reply_to(
+            message, 'Put File into favorites', parse_mode="MARKDOWN")
+    return
+
+@bot.message_handler(commands=['archive'])
+def archiveLatest(message):
+    cleanup("", False)
+    bot.reply_to(
+            message, 'Put File into Archive', parse_mode="MARKDOWN")
+    return
+
+@bot.message_handler(commands=['randomize'])
+def randomizeVideos(message):
+    cleanup("")
+    clearPlaylist()
+
+    copyAllFiles(archive, playlist)
+    copyAllFiles(favorites, playlist)
+
+    bot.reply_to(
+            message, 'Reset Playlist and moved the files.', parse_mode="MARKDOWN")
+    return
 
 @bot.message_handler(commands=['custom'])
 def custom(message):
