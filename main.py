@@ -24,7 +24,7 @@ def youtube_url_validation(url):
 
 
 
-def download_video(message, url, audio=False, format_id="mp4", archive=True, target=config.archiveFolder):
+def download_video(message, url, audio=False, format_id="mp4", archive=True, target=config.archiveFolder, playNow=True):
     url_info = urlparse(url)
     if url_info.scheme:
         if url_info.netloc in ['www.youtube.com', 'youtu.be', 'youtube.com', 'youtu.be']:
@@ -76,10 +76,20 @@ def download_video(message, url, audio=False, format_id="mp4", archive=True, tar
                     bot.edit_message_text(
                         chat_id=message.chat.id, message_id=msg.message_id, text=f"Couldn't send file, make sure it's supported by Telegram and it doesn't exceed *{round(config.max_filesize / 1000000)}MB*", parse_mode="MARKDOWN")
                     for file in info['requested_downloads']:
+                        if archive and playNow:
+                            filelist = [ f for f in os.listdir("/home/pi/projectDOGGO/playlist") if f.endswith(".bak") ]
+                            for f in filelist:
+                                os.remove(os.path.join("/home/pi/projectDOGGO/playlist", f))
+                            os.rename(file['filepath'], "/home/pi/projectDOGGO/playlist/" + os.path.basename(file['filepath']))
                         if not archive:
                             os.remove(file['filepath'])
                 else:
                     for file in info['requested_downloads']:
+                        if archive and playNow:
+                            filelist = [ f for f in os.listdir("/home/pi/projectDOGGO/playlist") if f.endswith(".bak") ]
+                            for f in filelist:
+                                os.remove(os.path.join("/home/pi/projectDOGGO/playlist", f))
+                            os.rename(file['filepath'], "/home/pi/projectDOGGO/playlist/" + os.path.basename(file['filepath']))
                         if not archive:
                             os.remove(file['filepath'])
             except Exception as e:
