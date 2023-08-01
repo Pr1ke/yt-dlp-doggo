@@ -36,7 +36,7 @@ def download_video(message, url, audio=False, format_id="mp4", target=buffer):
     if url_info.scheme:
         if url_info.netloc in ['www.youtube.com', 'youtu.be', 'youtube.com', 'youtu.be']:
             if not youtube_url_validation(url):
-                bot.reply_to(message, 'Invalid URL')
+                bot.reply_to(message, 'Konnte die URL nicht erkennen)')
                 return
 
         def progress(d):
@@ -60,7 +60,7 @@ def download_video(message, url, audio=False, format_id="mp4", target=buffer):
                 except Exception as e:
                     print(e)
 
-        msg = bot.reply_to(message, 'Downloading...')
+        msg = bot.reply_to(message, 'Lade Herunter...')
         with yt_dlp.YoutubeDL({'paths': {'home':target},'format': format_id, 'outtmpl': 'outputs/%(title)s.%(ext)s', 'progress_hooks': [progress], 'postprocessors': [{  # Extract audio using ffmpeg
             'key': 'FFmpegExtractAudio',
             'preferredcodec': 'mp3',
@@ -69,7 +69,7 @@ def download_video(message, url, audio=False, format_id="mp4", target=buffer):
                 info = ydl.extract_info(url, download=True, )
 
                 bot.edit_message_text(
-                    chat_id=message.chat.id, message_id=msg.message_id, text='Sending file to Telegram...')
+                    chat_id=message.chat.id, message_id=msg.message_id, text='Ich sende die Datei an Telegram...')
                 try:
                     if audio:
                         bot.send_audio(message.chat.id, open(
@@ -81,19 +81,19 @@ def download_video(message, url, audio=False, format_id="mp4", target=buffer):
                     bot.delete_message(message.chat.id, msg.message_id)
                 except Exception as e:
                     bot.edit_message_text(
-                        chat_id=message.chat.id, message_id=msg.message_id, text=f"Couldn't send file, make sure it's supported by Telegram and it doesn't exceed *{round(config.max_filesize / 1000000)}MB*", parse_mode="MARKDOWN")
+                        chat_id=message.chat.id, message_id=msg.message_id, text=f"Ich konnte die Datei nicht an Telegram senden, sie ist wahrscheinlich größer als *{round(config.max_filesize / 1000000)}MB*", parse_mode="MARKDOWN")
                 finally:
                     for file in info['requested_downloads']:
                         cleanup(file['filepath'])
             except Exception as e:
                 if isinstance(e, yt_dlp.utils.DownloadError):
                     bot.edit_message_text(
-                        'Invalid URL', message.chat.id, msg.message_id)
+                        'Ungültige URL', message.chat.id, msg.message_id)
                 else:
                     bot.edit_message_text(
-                        'There was an error downloading your video', message.chat.id, msg.message_id)
+                        'Es gab einen Fehler beim Herunterladen.', message.chat.id, msg.message_id)
     else:
-        bot.reply_to(message, 'Invalid URL')
+        bot.reply_to(message, 'Ungültige URL')
 
 
 def cleanup(newFile: str, moveToFavorite=False):
@@ -149,14 +149,35 @@ def get_text(message):
 @bot.message_handler(commands=['start', 'help'])
 def test(message):
     bot.reply_to(
-        message, "*Send me a video link* and I'll download it for you, works with *YouTube*, *Twitter*, *TikTok*, *Reddit* and more.\n\n_Powered by_ [yt-dlp](https://github.com/yt-dlp/yt-dlp/)", parse_mode="MARKDOWN", disable_web_page_preview=True)
+        message, "*Schicke mir einen Videolink* und ich werde das Video runterladen, funktioniert mit *YouTube*, *Twitter*, *TikTok*, *Reddit* und vielen mehr!", parse_mode="MARKDOWN")
+    bot.reply_to(
+        message, "/play - um das letzte Video abzuspielen."
+    )
+    bot.reply_to(
+        message, "/playfavorites - um deine favorierten Videos abzuspielen."
+    )
+    bot.reply_to(
+        message, "/playarchive - um deine archivierten Videos abzuspielen."
+    )
+    bot.reply_to(
+        message, "/randomize - um all deine Videos abzuspielen."
+    )
+    bot.reply_to(
+        message, "/archive - um das letzte Video zu archivieren."
+    )
+    bot.reply_to(
+        message, "/favorite - um das letzte Video zu favorisieren."
+    )
+    bot.reply_to(
+        message, "Standardmäßig werden Videos im Archiv gespeichert."
+    )
 
 @bot.message_handler(commands=['download'])
 def download_command(message):
     text = get_text(message)
     if not text:
         bot.reply_to(
-            message, 'Invalid usage, use `/download url`', parse_mode="MARKDOWN")
+            message, 'Ich konnte die URL nicht erkennen, probiere es mit `/download url`', parse_mode="MARKDOWN")
         return
 
     log(message, text, 'video')
@@ -168,7 +189,7 @@ def download_audio_command(message):
     text = get_text(message)
     if not text:
         bot.reply_to(
-            message, 'Invalid usage, use `/audio url`', parse_mode="MARKDOWN")
+            message, 'Ich konnte die URL nicht erkennen, probiere es mit `/audio url`', parse_mode="MARKDOWN")
         return
 
     log(message, text, 'audio')
@@ -179,7 +200,7 @@ def playBuffer(message):
     clearPlaylist()
     copyAllFiles(buffer, playlist)
     bot.reply_to(
-        message, 'Playing latest Video', parse_mode="MARKDOWN")
+        message, 'Ich spiele das letzte Video ab.', parse_mode="MARKDOWN")
     return
 
 @bot.message_handler(commands=['playfavorites'])
@@ -187,7 +208,7 @@ def playFavorites(message):
     clearPlaylist()
     copyAllFiles(favorites, playlist)
     bot.reply_to(
-        message, 'Playing favorited videos', parse_mode="MARKDOWN")
+        message, 'Ich spiele die favorisierten Videos ab.', parse_mode="MARKDOWN")
     return
 
 @bot.message_handler(commands=['playarchive'])
@@ -195,21 +216,21 @@ def playArchive(message):
     clearPlaylist()
     copyAllFiles(archive, playlist)
     bot.reply_to(
-        message, 'Playing Archived Videos', parse_mode="MARKDOWN")
+        message, 'Ich spiele die archivierten Videos ab.', parse_mode="MARKDOWN")
     return
 
 @bot.message_handler(commands=['favorite'])
 def favorite(message):
     cleanup("", True)
     bot.reply_to(
-            message, 'Put File into favorites', parse_mode="MARKDOWN")
+            message, 'Video wurde favorisiert.', parse_mode="MARKDOWN")
     return
 
 @bot.message_handler(commands=['archive'])
 def archiveLatest(message):
     cleanup("", False)
     bot.reply_to(
-            message, 'Put File into Archive', parse_mode="MARKDOWN")
+            message, 'Video wurde archiviert.', parse_mode="MARKDOWN")
     return
 
 @bot.message_handler(commands=['randomize'])
@@ -221,7 +242,7 @@ def randomizeVideos(message):
     copyAllFiles(favorites, playlist)
 
     bot.reply_to(
-            message, 'Reset Playlist and moved the files.', parse_mode="MARKDOWN")
+            message, 'Playlist wurde zurückgesetzt und alle Videos eingefügt.', parse_mode="MARKDOWN")
     return
 
 @bot.message_handler(commands=['custom'])
@@ -229,10 +250,10 @@ def custom(message):
     text = get_text(message)
     if not text:
         bot.reply_to(
-            message, 'Invalid usage, use `/custom url`', parse_mode="MARKDOWN")
+            message, 'Ich konnte die URL nicht erkennen, probiere es mit  `/custom url`', parse_mode="MARKDOWN")
         return
 
-    msg = bot.reply_to(message, 'Getting formats...')
+    msg = bot.reply_to(message, 'Ermittle Format...')
 
     with yt_dlp.YoutubeDL() as ydl:
         info = ydl.extract_info(text, download=False)
@@ -243,7 +264,7 @@ def custom(message):
     markup = quick_markup(data, row_width=2)
 
     bot.delete_message(msg.chat.id, msg.message_id)
-    bot.reply_to(message, "Choose a format", reply_markup=markup)
+    bot.reply_to(message, "Wähle bitte ein Format", reply_markup=markup)
 
 
 @bot.callback_query_handler(func=lambda call: True)
