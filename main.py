@@ -182,7 +182,7 @@ def playBuffer(message):
         message, 'Playing latest Video', parse_mode="MARKDOWN")
     return
 
-@bot.message_handler(commands=['play favorites'])
+@bot.message_handler(commands=['playfavorites'])
 def playFavorites(message):
     clearPlaylist()
     copyAllFiles(favorites, playlist)
@@ -190,7 +190,7 @@ def playFavorites(message):
         message, 'Playing favorited videos', parse_mode="MARKDOWN")
     return
 
-@bot.message_handler(commands=['play archive'])
+@bot.message_handler(commands=['playarchive'])
 def playArchive(message):
     clearPlaylist()
     copyAllFiles(archive, playlist)
