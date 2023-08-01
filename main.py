@@ -10,6 +10,9 @@ from telebot.util import quick_markup
 
 bot = telebot.TeleBot(config.token)
 last_edited = {}
+buffer = config.archiveFolder+"/buffer"
+archive = config.archiveFolder+"/archive"
+
 
 
 def youtube_url_validation(url):
@@ -24,7 +27,7 @@ def youtube_url_validation(url):
 
 
 
-def download_video(message, url, audio=False, format_id="mp4", archive=True, target=config.archiveFolder, playNow=True):
+def download_video(message, url, audio=False, format_id="mp4", target=buffer):
     url_info = urlparse(url)
     if url_info.scheme:
         if url_info.netloc in ['www.youtube.com', 'youtu.be', 'youtube.com', 'youtu.be']:
@@ -75,23 +78,9 @@ def download_video(message, url, audio=False, format_id="mp4", archive=True, tar
                 except Exception as e:
                     bot.edit_message_text(
                         chat_id=message.chat.id, message_id=msg.message_id, text=f"Couldn't send file, make sure it's supported by Telegram and it doesn't exceed *{round(config.max_filesize / 1000000)}MB*", parse_mode="MARKDOWN")
+                finally:
                     for file in info['requested_downloads']:
-                        if archive and playNow:
-                            filelist = [ f for f in os.listdir("/home/pi/projectDOGGO/playlist") ]
-                            for f in filelist:
-                                os.remove(os.path.join("/home/pi/projectDOGGO/playlist", f))
-                            os.rename(file['filepath'], "/home/pi/projectDOGGO/playlist/" + os.path.basename(file['filepath']))
-                        if not archive:
-                            os.remove(file['filepath'])
-                else:
-                    for file in info['requested_downloads']:
-                        if archive and playNow:
-                            filelist = [ f for f in os.listdir("/home/pi/projectDOGGO/playlist")  ]
-                            for f in filelist:
-                                os.remove(os.path.join("/home/pi/projectDOGGO/playlist", f))
-                            os.rename(file['filepath'], "/home/pi/projectDOGGO/playlist/" + os.path.basename(file['filepath']))
-                        if not archive:
-                            os.remove(file['filepath'])
+                        cleanup(file['filepath'])
             except Exception as e:
                 if isinstance(e, yt_dlp.utils.DownloadError):
                     bot.edit_message_text(
@@ -102,6 +91,20 @@ def download_video(message, url, audio=False, format_id="mp4", archive=True, tar
     else:
         bot.reply_to(message, 'Invalid URL')
 
+
+def cleanup(newFile: str):
+    filelist = get_all_files_in_directory(buffer)
+    for f in filelist:
+        if not os.path.basename(f) == newFile:
+            os.rename(f, archive + "/" + os.path.basename(f))
+
+def get_all_files_in_directory(path):
+    all_files = []
+    for root, dirs, files in os.walk(path):
+        for file in files:
+            file_path = os.path.join(root, file)
+            all_files.append(file_path)
+    return all_files
 
 def log(message, text: str, media: str):
     if config.logs:

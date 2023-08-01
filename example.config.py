@@ -1,4 +1,4 @@
 token = ""  # telegram token
 logs = # logs channel id, if none set to None
 max_filesize = 50000000  # bytes
-archiveFolder = "/home/pi/projectDOGGO/archive"
+directory = "/home/pi/projectDOGGO/"
