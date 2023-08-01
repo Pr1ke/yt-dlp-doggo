@@ -153,7 +153,7 @@ def createFileIfNotExists():
 def checkAuth(message):
     createFileIfNotExists()
     with open(auth, 'r') as file:
-        if message.chat.id in file.read():
+        if str(message.chat.id) in file.read():
             return True
         else:
             bot.reply_to(
@@ -163,7 +163,7 @@ def checkAuth(message):
 def authorize(message, passphrase: str):
     if config.passphrase == passphrase:
         with open(auth, 'a') as file:
-            file.write(message.chat.id)
+            file.write(str(message.chat.id))
             return True
     return False
 
