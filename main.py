@@ -151,7 +151,7 @@ def test(message):
     bot.reply_to(
         message, "*Schicke mir einen Videolink* und ich werde das Video runterladen, funktioniert mit *YouTube*, *Twitter*, *TikTok*, *Reddit* und vielen mehr!", parse_mode="MARKDOWN")
     bot.reply_to(
-        message, "/play - um das letzte Video abzuspielen."
+        message, "/play - um das letzte Video abzuspielen, oder /play url um das Video herunterzuladen und abzuspielen."
     )
     bot.reply_to(
         message, "/playfavorites - um deine favorierten Videos abzuspielen."
@@ -163,10 +163,10 @@ def test(message):
         message, "/randomize - um all deine Videos abzuspielen."
     )
     bot.reply_to(
-        message, "/archive - um das letzte Video zu archivieren."
+        message, "/archive - um das letzte Video zu archivieren, oder /archive url um das Video herunterzuladen und zu archivieren."
     )
     bot.reply_to(
-        message, "/favorite - um das letzte Video zu favorisieren."
+        message, "/favorite - um das letzte Video zu favorisieren, oder /favorite url um das Video herunterzuladen und favorisieren."
     )
     bot.reply_to(
         message, "Standardmäßig werden Videos im Archiv gespeichert."
@@ -197,6 +197,10 @@ def download_audio_command(message):
 
 @bot.message_handler(commands=['play'])
 def playBuffer(message):
+    text = get_text(message)
+    if text:
+        download_video(message, text)
+
     clearPlaylist()
     copyAllFiles(buffer, playlist)
     bot.reply_to(
@@ -221,6 +225,10 @@ def playArchive(message):
 
 @bot.message_handler(commands=['favorite'])
 def favorite(message):
+    text = get_text(message)
+    if text:
+        download_video(message, text)
+
     cleanup("", True)
     bot.reply_to(
             message, 'Video wurde favorisiert.', parse_mode="MARKDOWN")
@@ -228,6 +236,9 @@ def favorite(message):
 
 @bot.message_handler(commands=['archive'])
 def archiveLatest(message):
+    text = get_text(message)
+    if text:
+        download_video(message, text)
     cleanup("", False)
     bot.reply_to(
             message, 'Video wurde archiviert.', parse_mode="MARKDOWN")
