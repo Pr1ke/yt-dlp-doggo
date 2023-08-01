@@ -96,7 +96,7 @@ def cleanup(newFile: str):
     filelist = get_all_files_in_directory(buffer)
     for f in filelist:
         if not os.path.basename(f) == newFile:
-            os.rename(f, archive + "/" + os.path.basename(f))
+            os.rename(f, archive + os.path.basename(f))
 
 def get_all_files_in_directory(path):
     all_files = []
