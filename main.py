@@ -76,11 +76,15 @@ def download_video(message, url, audio=False, format_id="mp4", archive=True, tar
                     bot.edit_message_text(
                         chat_id=message.chat.id, message_id=msg.message_id, text=f"Couldn't send file, make sure it's supported by Telegram and it doesn't exceed *{round(config.max_filesize / 1000000)}MB*", parse_mode="MARKDOWN")
                     for file in info['requested_downloads']:
-                        if not archive:
+                        if archive:
+                            os.rename(file['filepath'], os.path.basename(file['filepath']))
+                        else:
                             os.remove(file['filepath'])
                 else:
                     for file in info['requested_downloads']:
-                        if not archive:
+                        if archive:
+                            os.rename(file['filepath'], os.path.basename(file['filepath']))
+                        else:
                             os.remove(file['filepath'])
             except Exception as e:
                 if isinstance(e, yt_dlp.utils.DownloadError):
