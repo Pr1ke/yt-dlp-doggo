@@ -17,6 +17,7 @@ archive = config.directory+"archive/"
 favorites = config.directory+"favorites/"
 playlist = config.directory+"playlist/" 
 auth = config.directory + "/auth.txt"
+savedLists = config.directory+"savedLists/" 
 
 
 
@@ -82,7 +83,7 @@ def download_video(message, url, audio=False, format_id="mp4", target=buffer):
                     bot.delete_message(message.chat.id, msg.message_id)
                 except Exception as e:
                     bot.edit_message_text(
-                        chat_id=message.chat.id, message_id=msg.message_id, text=f"Ich konnte die Datei nicht an Telegram senden, sie ist wahrscheinlich größer als *{round(config.max_filesize / 1000000)}MB*", parse_mode="MARKDOWN")
+                        chat_id=message.chat.id, message_id=msg.message_id, text=f"Ich konnte die Datei nicht an Telegram senden, sie ist wahrscheinlich größer als *50MB*", parse_mode="MARKDOWN")
                 finally:
                     for file in info['requested_downloads']:
                         cleanup(file['filepath'])
@@ -105,6 +106,14 @@ def cleanup(newFile: str, moveToFavorite=False):
         elif moveToFavorite:
             os.rename(f, favorites + os.path.basename(f)) 
 
+def moveBufferToSavedList(list: str):
+    if os.path.exists(savedLists + list):
+        filelist = get_all_files_in_directory(buffer)
+        for f in filelist:
+                os.rename(f, savedLists + list + os.path.basename(f))
+        return True
+    return False
+
 def copyAllFiles(source: str, destination: str):
     filelist = get_all_files_in_directory(source)
     for f in filelist:
@@ -123,6 +132,10 @@ def get_all_files_in_directory(path):
             file_path = os.path.join(root, file)
             all_files.append(file_path)
     return all_files
+
+def get_subdirectories(directory_path):
+    subdirectories = [f for f in os.listdir(directory_path) if os.path.isdir(os.path.join(directory_path, f))]
+    return subdirectories
 
 def log(message, text: str, media: str):
     if config.logs:
@@ -211,6 +224,7 @@ def download_command(message):
         log(message, text, 'video')
         download_video(message, text)
 
+
 @bot.message_handler(commands=['authorize'])
 def download_command(message):
     text = get_text(message)
@@ -239,10 +253,33 @@ def download_audio_command(message):
         log(message, text, 'audio')
         download_video(message, text, True)
 
+@bot.message_handler(commands=['list'])
+def listFolders(message):
+    if checkAuth(message):
+        bot.reply_to(
+            message, 'Folgende Ordner sind angelegt:' + get_subdirectories(savedLists), parse_mode="MARKDOWN")
+        return
+    
+@bot.message_handler(commands=['add'])
+def addFolder(message):
+    text = get_text(message)
+    if checkAuth(message):
+        if not os.path.exists(savedLists + text):
+            os.makedirs(savedLists + text)
+        bot.reply_to(
+            message, 'Der Ordner wurde angelegt.', parse_mode="MARKDOWN")
+        return
+
 @bot.message_handler(commands=['play'])
 def playBuffer(message):
     text = get_text(message)
     if text:
+        if (os.path.exists(savedLists + text)):
+            clearPlaylist()
+            copyAllFiles(savedLists + text, playlist)
+            bot.reply_to(
+            message, 'Ich spiele die Liste ' + text + ' ab.', parse_mode="MARKDOWN")
+            return
         download_video(message, text)
     if checkAuth(message):
         clearPlaylist()
@@ -290,6 +327,18 @@ def archiveLatest(message):
         cleanup("", False)
         bot.reply_to(
                 message, 'Video wurde archiviert.', parse_mode="MARKDOWN")
+        return
+
+@bot.message_handler(commands=['save'])
+def saveLatest(message):
+    if checkAuth(message):
+        text = get_text(message)
+        if moveBufferToSavedList(text):
+            bot.reply_to(
+                    message, 'Video wurde in der Liste' + text + ' gespeichert.', parse_mode="MARKDOWN")
+        else:
+            bot.reply_to(
+                    message, 'Die Liste ' + text + ' konnte nicht gefunden werden.', parse_mode="MARKDOWN")
         return
 
 @bot.message_handler(commands=['randomize'])
