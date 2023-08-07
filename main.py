@@ -255,9 +255,10 @@ def download_audio_command(message):
 
 @bot.message_handler(commands=['list'])
 def listFolders(message):
+    seperator = ', '
     if checkAuth(message):
         bot.reply_to(
-            message, 'Folgende Ordner sind angelegt:' + get_subdirectories(savedLists), parse_mode="MARKDOWN")
+            message, 'Folgende Ordner sind angelegt:' + seperator.join(get_subdirectories(savedLists)), parse_mode="MARKDOWN")
         return
     
 @bot.message_handler(commands=['add'])
