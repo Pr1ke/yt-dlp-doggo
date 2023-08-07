@@ -110,7 +110,7 @@ def moveBufferToSavedList(list: str):
     if os.path.exists(savedLists + list):
         filelist = get_all_files_in_directory(buffer)
         for f in filelist:
-                os.rename(f, savedLists + list + os.path.basename(f))
+                os.rename(f, savedLists + list + "/" + os.path.basename(f))
         return True
     return False
 
