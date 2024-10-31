@@ -21,12 +21,12 @@ savedLists = config.directory+"savedLists/"
 
 
 
+
 def youtube_url_validation(url):
     youtube_regex = (
         r'(https?://)?(www\.)?'
-        '(youtube|youtu|youtube-nocookie)\.(com|be)/'
-        '(watch\?v=|embed/|v/|.+\?v=)?([^&=%\?]{11})')
-
+        r'(youtube|youtu|youtube-nocookie)\.(com|be)/'
+        r'(watch\?v=|embed/|v/|.+\?v=)?([^&=%\?]{11})')
     youtube_regex_match = re.match(youtube_regex, url)
     return youtube_regex_match
 
@@ -34,7 +34,9 @@ def youtube_url_validation(url):
 
 
 def download_video(message, url, audio=False, format_id="mp4", target=buffer):
+    bot.reply_to(message, url)
     url_info = urlparse(url)
+    bot.reply_to(message, url_info)
     if url_info.scheme:
         if url_info.netloc in ['www.youtube.com', 'youtu.be', 'youtube.com', 'youtu.be']:
             if not youtube_url_validation(url):
