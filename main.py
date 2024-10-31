@@ -88,6 +88,7 @@ def download_video(message, url, audio=False, format_id="mp4", target=buffer):
                         cleanup(file['filepath'])
             except Exception as e:
                 bot.send_message(message.chat.id, str(e))
+                bot.send_message(message.chat.id, yt_dlp.version.__version__)
                 if isinstance(e, yt_dlp.utils.DownloadError):
                     bot.edit_message_text(
                         'Ungültige URL', message.chat.id, msg.message_id)
