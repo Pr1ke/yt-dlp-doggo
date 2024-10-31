@@ -42,7 +42,6 @@ def download_video(message, url, audio=False, format_id="mp4", target=buffer):
                 return
 
         def progress(d):
-            bot.send_message(message.chat.id, 'progressd')
             if d['status'] == 'downloading':
                 try:
                     update = False
@@ -88,6 +87,7 @@ def download_video(message, url, audio=False, format_id="mp4", target=buffer):
                     for file in info['requested_downloads']:
                         cleanup(file['filepath'])
             except Exception as e:
+                bot.send_message(message.chat.id, 'Exception!')
                 if isinstance(e, yt_dlp.utils.DownloadError):
                     bot.edit_message_text(
                         'Ungültige URL', message.chat.id, msg.message_id)
