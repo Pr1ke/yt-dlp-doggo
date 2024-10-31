@@ -34,7 +34,6 @@ def youtube_url_validation(url):
 
 
 def download_video(message, url, audio=False, format_id="mp4", target=buffer):
-    bot.send_message(message.chat.id, urlparse(url))
     url_info = urlparse(url)
     if url_info.scheme:
         if url_info.netloc in ['www.youtube.com', 'youtu.be', 'youtube.com', 'youtu.be']:
@@ -43,7 +42,7 @@ def download_video(message, url, audio=False, format_id="mp4", target=buffer):
                 return
 
         def progress(d):
-
+            bot.send_message(message.chat.id, 'progressd')
             if d['status'] == 'downloading':
                 try:
                     update = False
