@@ -34,10 +34,8 @@ def youtube_url_validation(url):
 
 
 def download_video(message, url, audio=False, format_id="mp4", target=buffer):
-    bot.send_message(message.chat.id, url)
-    bot.send_message(message.chat.id, "Tester")
+    bot.send_message(message.chat.id, urlparse(url))
     url_info = urlparse(url)
-    bot.send_message(message.chat.id, url_info)
     if url_info.scheme:
         if url_info.netloc in ['www.youtube.com', 'youtu.be', 'youtube.com', 'youtu.be']:
             if not youtube_url_validation(url):
